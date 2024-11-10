@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import emailjs from "@emailjs/browser";
+import { createTemplate } from "../utils/createTemplate";
+import "./App.css";
+import { useEffect, useState } from "react";
+import {
+  defaultToEmail,
+  publicKey,
+  serviceId,
+  templateId,
+  defaultFromName,
+  defaultToName,
+} from "../env-config";
+
+const emptyTemplate = `<div style="background: #e0e0e0;min-height: 100px"></div>`;
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [html, setHtml] = useState(emptyTemplate);
+
+  const handleShowHtml = async () => {
+    const template = await createTemplate({ title: "Mi Título" });
+    setHtml(template);
+  };
+
+  const handleSendEmail = () => {
+    const templateParams = {
+      from_name: defaultFromName,
+      to_name: defaultToName,
+      to_email: defaultToEmail,
+      message_html: html,
+    };
+    sendEmail(templateParams);
+  };
+
+  const sendEmail = (templateParams) => {
+    emailjs.send(serviceId, templateId, templateParams, publicKey).then(
+      () => {
+        alert("✔️ EMAIL ENVIADO CORRECTAMENTE");
+      },
+      (error) => {
+        alert("✖️ ERROR ENVIANDO EMAIL", error?.text || "");
+      }
+    );
+  };
+
+  useEffect(() => {
+    handleShowHtml();
+  }, []);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <button
+        disabled={html === emptyTemplate}
+        onClick={() => handleSendEmail()}
+      >
+        send email
+      </button>
+      <br />
+      <br />
+      <div dangerouslySetInnerHTML={{ __html: html }}></div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
